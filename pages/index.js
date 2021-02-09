@@ -1,65 +1,67 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Link from 'next/link'
+import { Container, Card, Image, Label, Grid, Button, Segment } from 'semantic-ui-react'
+import { useDispatchCart } from '../components/Cart'
+import CartProduct from '../models/cartProduct'
+import { addItem } from '../helpers/cartHelper'
 
-export default function Home() {
+export default function Home({products}) {
+
+  const dispatch = useDispatchCart();
+
+    const addToCart = (product) => {
+
+        let addedProduct = new CartProduct(product._id, product.name, product.price, 1, product.mediaUrl);
+        
+        dispatch({ type: "ADD", addedProduct });
+
+        addItem(addedProduct);
+    };
+    
+  const productList = products.map(product=>{
+    return(
+      <Grid.Column>        
+        <Card raised style={{ marginBottom: '15px' }} >
+          <Link href={'/product/[id]'} as={`/product/${product._id}`}>
+            <Image as='a' src={product.mediaUrl} wrapped ui={false} style={{ padding: '10px', backgroundColor: 'white' }}/>
+          </Link>
+            <Card.Content>
+              <Card.Header style={{ marginTop: '3px' }}>{product.name}</Card.Header>
+              <Card.Description>
+                <Label color='teal' tag style={{ marginTop: '7px' }}>
+                  {product.price}
+                </Label>
+              </Card.Description>
+            </Card.Content>
+              <Button onClick={() => { addToCart(product) }} color='green'>Add to Cart</Button> 
+        </Card>    
+      </Grid.Column>
+    )
+  })
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
+    <Container style={{ marginTop: '70px' }}>
+      <Grid>
+        <Grid.Column>
+          <Segment raised>
+            <span>All Items</span>
+          </Segment>
+        </Grid.Column>
+      </Grid>
+      
+      <Grid stackable columns={4}>
+        {productList}
+      </Grid>
+    </Container>
   )
 }
+
+export async function getStaticProps(){
+  const res =  await fetch(`http://localhost:3000/api/products`)
+  
+  const data = await res.json()
+  return {
+    props:{
+      products:data
+    }
+  }
+ }
